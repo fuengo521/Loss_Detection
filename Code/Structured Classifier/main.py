@@ -3,16 +3,24 @@ from models import new_model, bulk_model, new_labels, bulk_labels, new_embedding
 from retailer import normalize_text, find_best_match
 from evaluation import evaluate_model
 import pandas as pd
+import logging
+from logger_config import setup_logger
+
+setup_logger()
+logger = logging.getLogger(__name__)
 
 def main():
     # Load and preprocess data
+    logger.info('starting main execution')
     df = load_data()
     
     # Prepare list of listing titles (lowercase, stripped)
     phrases = [title.lower().strip() for title in df['title'].tolist()]
     
     # Run sentiment classification for 'new' and 'bulk'
+    logger.info("running sentiment classification for 'new'")
     df['new'] = classify_sentiments_batch(phrases, new_model, new_embeddings, new_labels, batch_size=100, threshold=0.3)
+    logger.info("running sentiment classification for 'bulk'")
     df['bulk'] = classify_sentiments_batch(phrases, bulk_model, bulk_embeddings, bulk_labels, batch_size=100, threshold=0.12)
     
     # Replace predictions: '1' becomes 1 and 'uncertain' becomes 0
@@ -20,9 +28,11 @@ def main():
     df['new'] = df['new'].replace({'1': 1, "uncertain": 0})
     
     # Evaluate model predictions against manual labels
+    logger.info('evaluating model performance')
     evaluate_model(df)
     
     # Retailer analysis
+    logger.info('starting retailer analysis')
     stores = [
         "7-Eleven", "ACME", "aerie", "Ahold Delhaize", "Albertsons", "ALLEN EDMONDS", "alo", "amazon", "AMERICAN EAGLE", "AMOCO",
         "ampm", "Apple", "ARC'TERYX", "at home", "AT&T", "Athleta", "AutoZone", "Banana Republic", "Bass Pro Shops", "Bath & Body Works",
@@ -46,6 +56,7 @@ def main():
     # Normalize retailer names for matching
     stores_normalized = [normalize_text(s) for s in stores]
     df['retailer'] = df['title'].apply(lambda x: find_best_match(x, stores_normalized, threshold=70, original_choices=stores))
+    logger.info('retailer matching complete')
     print(df[['title', 'retailer']])
     
     # Compute a basic "sus" score as per current logic (to be improved later)
@@ -54,7 +65,7 @@ def main():
     df['new_sus'] = df['new'] + df['bulk'] + df['number_retailer']
     df['error'] = ((df['og_sus'] - df['new_sus'])**2)**0.5
     wrong_sus = df[df['error'] > 0]
-    print("Number of rows where sus score differs:", len(wrong_sus))
+    logger.info("Number of rows where sus score differs: %s", len(wrong_sus))
     
 if __name__ == "__main__":
     main()

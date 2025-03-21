@@ -1,6 +1,10 @@
 from sentence_transformers import SentenceTransformer, util
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Load SBERT models for both new and bulk classification
+logger.info('loading SBERT models for new and bulk classification')
 new_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 bulk_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
@@ -14,6 +18,7 @@ new_labels = {
 }
 
 # Compute embeddings for label texts
+logger.info('comupting label embeddings')
 new_texts = list(new_labels.values())
 new_embeddings = new_model.encode(new_texts, normalize_embeddings=True)
 bulk_texts = list(bulk_labels.values())
@@ -37,4 +42,5 @@ def classify_sentiments_batch(phrases, model, sentiment_embeddings, sentiment_la
                 results.append("uncertain")
             else:
                 results.append(label_keys[best_match_idx])
+    logger.info('classification complete')
     return results

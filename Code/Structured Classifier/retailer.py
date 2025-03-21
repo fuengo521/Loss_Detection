@@ -1,6 +1,9 @@
 import re
 import pandas as pd
 from thefuzz import fuzz, process
+import logging
+
+logger = logging.getLogger(__name__)
 
 def normalize_text(text):
     # Normalize text: lower case, remove punctuation and white space
@@ -26,5 +29,7 @@ def find_best_match(text, choices, threshold=70, original_choices=None):
             original_store = [s for s in original_choices if normalize_text(s) == match[0]][0]
         else:
             original_store = match[0]
+        logger.debug("'%s' matched with '%s' (score: %s)", text, original_store, match[1])
         return original_store
+    logger.debug("no suitable match found for '%s' (best score: '%s')", text, match[1] if match else 'N/A')
     return None
