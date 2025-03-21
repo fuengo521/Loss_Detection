@@ -4,6 +4,11 @@ import pandas as pd
 from thefuzz import fuzz
 from thefuzz import process
 import re
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Load SBERT model and initialize labels
 new_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
@@ -46,7 +51,8 @@ def classify_sentiments_batch(phrases, model, sentiment_embeddings, sentiment_la
     return results
 
 #Load data
-df = pd.read_csv('Craigslist_test.csv')
+#df = pd.read_csv('Craigslist_test.csv')
+df = pd.read_csv(os.getenv('DATA_FILE'))
 df = df.drop(columns=['origin_city', 'posted_time', 'cat_code','price', 'post_id', 'posted_location', 'scraped_time', 'post_link', 'category', 'LOW PRICE'])
 df.head()
 phrases = [title.lower().strip() for title in df['title'].tolist()]

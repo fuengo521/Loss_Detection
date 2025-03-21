@@ -1,0 +1,7 @@
+numpy
+pandas
+scikit-learn
+thefuzz
+sentence-transformers
+torch
+python-dotenv
